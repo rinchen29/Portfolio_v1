@@ -5,6 +5,9 @@
   "use strict";
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Touch / small screens: skip scroll-driven transforms — they cause jank on phones.
+  const isTouch =
+    window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 820;
 
   /* ---- 1. Scroll-driven parallax on hero layers ---- */
   const parallaxEls = Array.from(document.querySelectorAll(".parallax, .hero-orbit"));
@@ -35,7 +38,7 @@
   function onScroll() {
     if (!ticking) {
       window.requestAnimationFrame(() => {
-        if (!reduce) applyParallax();
+        if (!reduce && !isTouch) applyParallax();
         updateProgress();
       });
       ticking = true;
@@ -79,8 +82,10 @@
     setTimeout(() => s.remove(), dur * 1000 + 500);
   }
   if (!reduce) {
-    for (let i = 0; i < 6; i++) setTimeout(spawnGlyph, i * 700);
-    setInterval(spawnGlyph, 2600);
+    const seed = isTouch ? 3 : 6;
+    const every = isTouch ? 4200 : 2600; // fewer, slower glyphs on phones
+    for (let i = 0; i < seed; i++) setTimeout(spawnGlyph, i * 700);
+    setInterval(spawnGlyph, every);
   }
 
   /* ---- 5. Restart-the-journey button ---- */
